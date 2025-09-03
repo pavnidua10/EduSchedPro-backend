@@ -11,6 +11,13 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
+// Import routes
+const authRoutes = require("./routes/auth");
+
+
+// Use routes
+app.use("/auth", authRoutes);
+
 // Test route
 app.get("/", (req, res) => {
   res.send("✅ Backend is running 🚀");
@@ -29,3 +36,4 @@ mongoose
     });
   })
   .catch((err) => console.error("❌ DB connection error:", err));
+
