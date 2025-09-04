@@ -1,21 +1,27 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-require("dotenv").config();
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
+
+import authRoutes from "./routes/auth.js";
+
+dotenv.config();
 
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "*",
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 app.use(cookieParser());
 
-// Import routes
-const authRoutes = require("./routes/auth");
-
-
-// Use routes
+// Routes
 app.use("/auth", authRoutes);
 
 // Test route
@@ -36,4 +42,3 @@ mongoose
     });
   })
   .catch((err) => console.error("❌ DB connection error:", err));
-

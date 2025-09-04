@@ -1,35 +1,38 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
-const userSchema = new mongoose.Schema({
-  name: { type: String },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ["teacher", "admin"], required: true },
-  
-  designation: { type: String }, // only for admin (HOD, Director, etc.)
-  department: String,            // mostly for teachers
-  
-  subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }],
-  maxHoursPerWeek: { type: Number, default: 20 },
-  availableDays: [{ type: String, enum: ["Mon","Tue","Wed","Thu","Fri","Sat"] }],
-  availableSlots: [{ type: mongoose.Schema.Types.ObjectId, ref: "Timeslot" }],
-  
-  isVerified: { type: Boolean, default: false } // ✅ teacher must be approved by admin
-}, { timestamps: true });
+const userSchema = new mongoose.Schema(
+  {
+    email: { 
+      type: String, 
+      required: true, 
+      unique: true, 
+      lowercase: true, 
+      trim: true 
+    },
+    password: { type: String, required: true },
+    name: { type: String},
+    employeeId: { type: String, unique: true, sparse: true },
+    phone: { type: String },
+    avatar: { type: String },
+    role: { type: String, enum: ["admin", "faculty", "hod"], required: true },
+    department: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
+    permissions: [{ type: String }],
+    isVerified: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: true },
+    lastLogin: { type: Date, default: null },
+    joinDate: { type: Date, default: Date.now }
+  },
+  { timestamps: true }
+);
 
 // Hash password before save
 const SALT_ROUNDS = 10;
-
 userSchema.pre("save", async function (next) {
-  try {
-    if (!this.isModified("password") || !this.password) return next();
-    const salt = await bcrypt.genSalt(SALT_ROUNDS);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
-  }
+  if (!this.isModified("password") || !this.password) return next();
+  const salt = await bcrypt.genSalt(SALT_ROUNDS);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 // Compare password
@@ -37,4 +40,13 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model("User", userSchema);
+// Remove password from JSON output
+userSchema.set("toJSON", {
+  transform: function (doc, ret) {
+    delete ret.password;
+    return ret;
+  }
+});
+
+const User = mongoose.model("User", userSchema);
+export default User;

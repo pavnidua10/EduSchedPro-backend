@@ -1,6 +1,6 @@
-const express = require("express");
-const { signup, login, verifyTeacher } = require("../controllers/auth");
-const { protect, restrictTo } = require("../middleware/authMiddleware");
+import express from "express";
+import { signup, login, verifyTeacher } from "../controllers/auth.js";
+import { protect, restrictTo } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -10,4 +10,4 @@ router.post("/login", login);
 // only admin can verify teachers
 router.put("/verify/:id", protect, restrictTo("admin"), verifyTeacher);
 
-module.exports = router;
+export default router;
